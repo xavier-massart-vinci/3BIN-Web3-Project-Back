@@ -1,0 +1,36 @@
+# Project Web3 Back
+
+## Installation
+
+1. Clone the repository:
+    ```sh
+    git clone https://github.com/xavier-massart-vinci/3BIN-Web3-Project-Back.git
+    ```
+
+2. Navigate to the project directory:
+    ```sh
+    cd project-web3-back
+    ```
+    
+3. Create .env and add the following environment variables: 
+    ```env 
+    MONGODB=YOUR_URL_MONGODB
+    JWT_SECRET=YOUR_SECRET
+    ```
+
+4. Install the dependencies:
+    ```sh
+    npm install
+    ```
+
+5. Start the development server:
+    ```sh
+    npm run dev
+    ```
+
+## Production 
+To start the server in production mode: 
+    ```sh 
+    npm install 
+    npm run start 
+    ```
