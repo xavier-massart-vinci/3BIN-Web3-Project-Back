@@ -10,18 +10,27 @@ router.post('/register', async (req, res) => {
     if(!username || !password){
         return res.sendStatus(400);
     }
-    try{
-        const hashedPassword = await bcrypt.hash(password, 13);
-        const user = new User({username, password: hashedPassword});
-        user.save().then(() => {
-            const token = jwt.sign({username}, process.env.JWT_SECRET);
-            return res.json({token}).status(201);
-        }).catch(() => {
-            res.sendStatus(400);
-        })
-    } catch {
+    
+    User.findOne({ username }).then((existingUser) => {
+        if (existingUser) {
+            return res.sendStatus(409);
+        }
+        try{
+            const hashedPassword = bcrypt.hash(password, 13);
+            const user = new User({username, password: hashedPassword});
+            user.save().then(() => {
+                const token = jwt.sign({username}, process.env.JWT_SECRET);
+                return res.json({token}).status(201);
+            }).catch(() => {
+                res.sendStatus(400);
+            })
+        } catch {   
+            res.sendStatus(500);
+        }
+    }).catch(() => {
         res.sendStatus(500);
-    }
+    });
+    
 })
 
 
