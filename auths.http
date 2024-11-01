@@ -1,0 +1,23 @@
+@baseUrl=http://localhost:3000
+
+
+### Register a new user
+POST {{baseUrl}}/auth/register 
+Content-Type: application/json
+
+{
+    "username": "Xavier",
+    "password": "123456"
+}
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "username": "Xavier",
+    "password": "123456"
+}
+
+
+
