@@ -23,3 +23,9 @@ Content-Type: application/json
 
 ### Get all users
 GET {{baseUrl}}/users
+
+
+
+### Get user by id
+GET {{baseUrl}}/users/6723ebd20ac5e91ecd33ae1b
+
