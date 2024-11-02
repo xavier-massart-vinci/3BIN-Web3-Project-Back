@@ -23,6 +23,6 @@ app.use(cors({
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
-app.use('/', friendsRouter);
+app.use('/friends', friendsRouter);
 
 module.exports = app;
