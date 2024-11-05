@@ -4,14 +4,14 @@ const jwt = require('jsonwebtoken');
 function verifyAuth(req, res, next){
     console.log(req.header('Authorization'));
     const token = req.header('Authorization');
-    if(!token){
+    if (!token) {
         return res.sendStatus(401);
     }
-    try{
+    try {
         const verified = jwt.verify(token, process.env.JWT_SECRET);
         req.user = verified;
         next();
-    }catch{
+    } catch {
         res.sendStatus(401);
     }
 }
