@@ -3,6 +3,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
+var { Server } = require('socket.io');
 require('dotenv').config();
 
 var indexRouter = require('./routes/index');
@@ -10,7 +11,20 @@ var authRouter = require('./routes/auths');
 var usersRouter = require('./routes/users');
 
 var app = express();
+// const server = createServer(app);
+const io = new Server({
+  cors: {
+    origin: "*"
+  }
+});
 
+io.listen(4000);
+
+
+io.on('connection', (socket) => { 
+  console.log("A user is connected");
+
+});
 
 var corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
