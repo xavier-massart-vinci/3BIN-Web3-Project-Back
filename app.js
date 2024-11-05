@@ -1,25 +1,25 @@
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var cors = require('cors');
-var { Server } = require('socket.io');
-var http = require('http');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const cors = require('cors');
+const { Server } = require('socket.io');
+const http = require('http');
 require('dotenv').config();
 
-var indexRouter = require('./routes/index');
-var authRouter = require('./routes/auths');
-var usersRouter = require('./routes/users');
-const verifyAuth = require('./middleware/authMiddleware');
+const indexRouter = require('./routes/index');
+const authRouter = require('./routes/auths');
+const usersRouter = require('./routes/users');
 const socketAuthMiddleware = require('./middleware/socketAuthMiddleware');
 
-var app = express();
+const app = express();
 const server = http.createServer(app);
 
-var corsOptions = {
+const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-  ? process.env.PRODUCTION_ORIGIN : '*'
-}
+    ? process.env.PRODUCTION_ORIGIN 
+    : '*'
+};
 
 app.use(cors(corsOptions));
 app.use(logger('dev'));
@@ -27,15 +27,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-// app.use(verifyAuth) 
-
 const io = new Server(server, {
   cors: {
     origin: "*"
   }
 });
 
-socketAuthMiddleware(io)
+socketAuthMiddleware(io);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -44,8 +42,7 @@ app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 
 io.on('connection', (socket) => {
-  console.log('A user connected');
-  console.log(JSON.stringify(socket.user));
+  console.log(`${socket.user.username} is connected`);
   socket.on('disconnect', () => {
     console.log('User disconnected');
   });
