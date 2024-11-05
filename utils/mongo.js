@@ -3,18 +3,19 @@ const mongoose = require('mongoose')
 
 mongoose.set('strictQuery', false)
 
-const connect = async () => {
-    try {
-        const url = process.env.MONGODB;
-        console.log('Connecting to MongoDB:', url);
+const url = process.env.MONGODB
 
-        await mongoose.connect(url);
-        console.log('Connected to MongoDB successfully.');
-        
-    } catch (error) {
-        console.error('Error connecting to MongoDB:', error.message);
-    }
-};
+const connect = () => {
+    mongoose.connect(url)
+    .then(result => {
+        console.log('connected to MongoDB')
+        return mongoose
+    })
+    .catch(error => {
+        console.log('error connecting to MongoDB:', error.message)
+        return null;
+    })
+}
 
 
 module.exports = connect;
