@@ -26,7 +26,7 @@ io.use((socket, next) => {
         if (err) { 
             return next(new Error('Authentication error')); 
         } 
-      socket.user = user; 
+      socket.user = {username: user.username}; 
       next(); 
     }); 
   });
