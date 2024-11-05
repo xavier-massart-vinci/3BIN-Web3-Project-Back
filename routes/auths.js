@@ -11,12 +11,12 @@ router.post('/register', async (req, res) => {
         return res.sendStatus(400);
     }
     
-    User.findOne({ username }).then((existingUser) => {
+    User.findOne({ username }).then( async (existingUser) => {
         if (existingUser) {
             return res.sendStatus(409);
         }
         try{
-            const hashedPassword = bcrypt.hash(password, 13);
+            const hashedPassword = await bcrypt.hash(password, 13);
             const user = new User({username, password: hashedPassword});
             user.save().then(() => {
                 const token = jwt.sign({username}, process.env.JWT_SECRET);
