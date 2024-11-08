@@ -6,44 +6,58 @@ const cors = require('cors');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
+const authSocketMiddleware = require('./middleware/authSocketMiddleware');
+
+
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auths');
 const usersRouter = require('./routes/users');
-const socketAuthMiddleware = require('./middleware/socketAuthMiddleware');
 
-var app = express();
-
-const io = new Server({
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
-});
-io.listen(4000); //socket.io server listens to port 4000 (TODO CLEANUP)
-
-socketAuthMiddleware(io);
-
-
-
-io.on('connection', (socket) => { 
-  console.log(socket.user.username, " is connected");
-  socket.on('disconnect', () => {
-    console.log(socket.user.username, " is disconnected");
-  });
-
-  socket.on('globalChatMessage', (msg) => {
-    io.emit('globalChatMessage', {msg, user: socket.user.username});
-    console.log('message: ' + msg + ' from ' + socket.user.username);
-  });
-});
-
-
-var corsOptions = {
+const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? process.env.PRODUCTION_ORIGIN 
     : '*'
 };
 
+
+
+
+
+// SOCKET.IO
+const io = new Server({
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+}).listen(4000); // TODO: Change port number
+
+const globalChat = require('./socket/chatGlobalHandler')(io);
+
+// Middleware (connection)
+io.use(authSocketMiddleware);
+
+
+// listen for incoming connections
+io.on('connection', (socket) => { 
+  console.log(socket.user.username, " is connected"); // DEBUG
+  
+  socket.on('disconnect', () => {
+    console.log(socket.user.username, " is disconnected"); // DEBUG
+  });
+
+  // Attach event listeners
+  socket.on('globalChatMessage', globalChat);
+  // ADD YOUR EVENT LISTENERS HERE
+});
+
+
+
+
+
+// API
+var app = express();
+
+// Middleware
 app.use(cors(corsOptions));
 app.use(logger('dev'));
 app.use(express.json());
