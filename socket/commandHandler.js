@@ -2,7 +2,7 @@ module.exports = (msg) => {
   switch (msg.content) {
     case "/gif":
       msg.content = "https://www.icegif.com/wp-content/uploads/2023/06/icegif-154.gif";
-      msg.type = "image";
+      msg.type = "gif";
       break;
 
     case "/meme":
@@ -25,7 +25,7 @@ module.exports = (msg) => {
 
 
     default:
-      msg.content = "Command not found";
+      msg.content = "Command not found"; // Normalement gérer dans le front
       msg.type = "error";
       break;
   }
