@@ -30,9 +30,9 @@ router.get('/search', verifyAuth, async (req, res) => {
 });
 
 router.post('/addFriend', verifyAuth, async (req, res) => {
-    const usernameFriend = req.body;
+    const usernameFriend = req.body.username;
     const usernameCurrent = req.user.username;
-     
+    
     try {
         // Find the user to be added by username
         const userToAdd = await User.findOne({ username: usernameFriend });
@@ -45,7 +45,10 @@ router.post('/addFriend', verifyAuth, async (req, res) => {
         if (!currentUser) {
             return res.status(404).json({ error: 'Current user not found' });
         }
- 
+
+        if(currentUser.username === userToAdd.username){
+            return res.status(400).json({ message: 'You cannot add yourself as a friend' });
+        }
         console.log("req.user",req.user);
         console.log("current",currentUser);
         console.log("friends",currentUser.friends);
@@ -68,12 +71,12 @@ router.post('/addFriend', verifyAuth, async (req, res) => {
 });
 
 router.post('/deleteFriend', verifyAuth, async (req, res) => {
-    const userDelete = req.body; // Nom d'utilisateur de l'ami à supprimer
+    const userDelete = req.body.username; // Nom d'utilisateur de l'ami à supprimer
     const currentUsername = req.user.username; // Nom d'utilisateur du user connecté
 
     try {
         // Recherche de l'ami à supprimer par son nom d'utilisateur
-        const userToRemove = await User.findOne({ username: userDelete.username });
+        const userToRemove = await User.findOne({ username: userDelete });
         if (!userToRemove) {
             return res.status(404).json({ error: 'Ami non trouvé' });
         } 
