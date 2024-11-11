@@ -16,6 +16,7 @@ const messageSocketMiddleware = (socket, next) => {
         } 
         message.id = uuidv4();
         message.time = new Date().toISOString(); next(); 
+        message.fromUsername = socket.user.username;
     });
 }
 
