@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/Users');
-const verifyAuth = require('../middleware/authMiddleware');
+const verifyAuth = require('../middleware/authAPIMiddleware');
 
 
 router.get('/getFriends', verifyAuth, async (req, res) => {
@@ -32,7 +32,7 @@ router.get('/search', verifyAuth, async (req, res) => {
 router.post('/addFriend', verifyAuth, async (req, res) => {
     const usernameFriend = req.body.username;
     const usernameCurrent = req.user.username;
-    
+     
     try {
         // Find the user to be added by username
         const userToAdd = await User.findOne({ username: usernameFriend });
@@ -49,10 +49,6 @@ router.post('/addFriend', verifyAuth, async (req, res) => {
         if(currentUser.username === userToAdd.username){
             return res.status(400).json({ message: 'You cannot add yourself as a friend' });
         }
-        console.log("req.user",req.user);
-        console.log("current",currentUser);
-        console.log("friends",currentUser.friends);
-        console.log("userToAdd",userToAdd._id); 
 
         // Check if the friend is already in the list
         if (!currentUser.friends.includes(userToAdd._id)) {
