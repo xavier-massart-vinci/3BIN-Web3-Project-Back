@@ -1,6 +1,8 @@
-import uuid4 from "uuid4";
+const { v4: uuidv4 } = require('uuid');
 
-const messageSocketMiddleware = (socket, socket, next) => {
+
+
+const messageSocketMiddleware = (socket, next) => {
     socket.use((packet, next) => { const message = packet[1]; 
         if (!message || typeof message !== 'object'
             || !message.from 
@@ -12,11 +14,9 @@ const messageSocketMiddleware = (socket, socket, next) => {
         ) {
              return next(new Error('Invalid message format')); 
         } 
-        message.id = uuid4();
+        message.id = uuidv4();
         message.time = new Date().toISOString(); next(); 
     });
 }
 
-
-
-export default messageSocketMiddleware;
+module.exports = messageSocketMiddleware;
