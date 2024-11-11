@@ -32,7 +32,7 @@ const io = new Server({
   }
 }).listen(4000); // TODO: Change port number
 
-const globalChat = require('./socket/chatGlobalHandler')(io);
+const globalChat = require('./socket/globalChatHandler')(io);
 const privateChat = require('./socket/privateChatHandler')(io);
 
 // Middleware (connection)
