@@ -17,6 +17,8 @@
     NODE_ENV=development
     MONGODB=YOUR_URL_MONGODB
     JWT_SECRET=YOUR_SECRET
+    API_PORT=3000
+    SOCKET_PORT=4000
     ```
 
 4. Install the dependencies:
@@ -31,7 +33,7 @@
 
 ## Production 
 
-1. Edit the node .env
+1. Edit the node .env and add
     ```env
         NODE_ENV=production
         PRODUCTION_ORIGIN=API_IP_OR_DOMAIN_NAME

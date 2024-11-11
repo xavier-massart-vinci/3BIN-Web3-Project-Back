@@ -4,7 +4,11 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
 const { Server } = require('socket.io');
+const connect = require('./utils/mongo');
 require('dotenv').config();
+
+// try to connect to the database
+connect();
 
 const authSocketMiddleware = require('./middleware/authSocketMiddleware');
 const messageSocketMiddleware = require('./middleware/messageSocketMiddleware');
@@ -13,6 +17,7 @@ const messageSocketMiddleware = require('./middleware/messageSocketMiddleware');
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auths');
 const usersRouter = require('./routes/users');
+const addMessageInDB = require('./utils/message');
 
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
@@ -60,6 +65,7 @@ io.on('connection', (socket) => {
   // Send to all users the new user
   socket.broadcast.emit('userDiscovery', {user: socket.user, socketId: socket.id});
 
+  
   // Attach event listeners
   socket.on('globalChatMessage', globalChat);
   socket.on('privateChatMessage', privateChat);
