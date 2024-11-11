@@ -37,34 +37,32 @@ const privateChat = require('./socket/privateChatHandler')(io);
 
 // Middleware (connection)
 io.use(authSocketMiddleware);
-
+io.use(messageMiddleware);
 
 // listen for incoming connections
 io.on('connection', (socket) => { 
   console.log(socket.user.username, " is connected"); // DEBUG
   
   socket.on('disconnect', () => {
-    console.log(socket.user.username, " is disconnected"); // DEBUG
+  console.log(socket.user.username, " is disconnected"); // DEBUG
 
     // Send to all users the disconnected user
     socket.broadcast.emit('userDisconnect', {user: socket.user.username, socketId: socket.id});
   });
 
-    // Send to the newly connected user the list of users
-    var users = [];
-    for (let [id, soc] of io.of("/").sockets) {
-      users.push({user: soc.user.username, socketId: id});
-    }
-    socket.emit('userDiscoveryInit', users);
-  
-    // Send to all users the new user
-    socket.broadcast.emit('userDiscovery', {user: socket.user.username, socketId: socket.id});
+  // Send to the newly connected user the list of users
+  var users = [];
+  for (let [id, soc] of io.of("/").sockets) {
+    users.push({user: soc.user, socketId: id});
+  }
+  socket.emit('userDiscoveryInit', users);
 
+  // Send to all users the new user
+  socket.broadcast.emit('userDiscovery', {user: socket.user, socketId: socket.id});
 
   // Attach event listeners
   socket.on('globalChatMessage', globalChat);
   socket.on('privateChatMessage', privateChat);
-  // ADD YOUR EVENT LISTENERS HERE
 });
 
 
