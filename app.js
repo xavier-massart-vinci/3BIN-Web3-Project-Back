@@ -7,12 +7,12 @@ const { Server } = require('socket.io');
 require('dotenv').config();
 
 const authSocketMiddleware = require('./middleware/authSocketMiddleware');
+const messageSocketMiddleware = require('./middleware/messageSocketMiddleware');
 
 
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auths');
 const usersRouter = require('./routes/users');
-const privateChatHandler = require('./socket/privateChatHandler');
 
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
@@ -37,7 +37,7 @@ const privateChat = require('./socket/privateChatHandler')(io);
 
 // Middleware (connection)
 io.use(authSocketMiddleware);
-io.use(messageMiddleware);
+io.use(messageSocketMiddleware);
 
 // listen for incoming connections
 io.on('connection', (socket) => { 
