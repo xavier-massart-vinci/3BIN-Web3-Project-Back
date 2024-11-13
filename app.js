@@ -7,6 +7,7 @@ const { Server } = require('socket.io');
 require('dotenv').config();
 
 const authSocketMiddleware = require('./middleware/authSocketMiddleware');
+const messageSocketMiddleware = require('./middleware/messageSocketMiddleware');
 
 
 const indexRouter = require('./routes/index');
@@ -32,23 +33,37 @@ const io = new Server({
   }
 }).listen(4000); // TODO: Change port number
 
-const globalChat = require('./socket/chatGlobalHandler')(io);
+const globalChat = require('./socket/globalChatHandler')(io);
+const privateChat = require('./socket/privateChatHandler')(io);
 
 // Middleware (connection)
 io.use(authSocketMiddleware);
-
+io.use(messageSocketMiddleware);
 
 // listen for incoming connections
 io.on('connection', (socket) => { 
   console.log(socket.user.username, " is connected"); // DEBUG
   
   socket.on('disconnect', () => {
-    console.log(socket.user.username, " is disconnected"); // DEBUG
+  console.log(socket.user.username, " is disconnected"); // DEBUG
+
+    // Send to all users the disconnected user
+    socket.broadcast.emit('userDisconnect', {user: socket.user.username, socketId: socket.id});
   });
+
+  // Send to the newly connected user the list of users
+  var users = [];
+  for (let [id, soc] of io.of("/").sockets) {
+    users.push({user: soc.user, socketId: id});
+  }
+  socket.emit('userDiscoveryInit', users);
+
+  // Send to all users the new user
+  socket.broadcast.emit('userDiscovery', {user: socket.user, socketId: socket.id});
 
   // Attach event listeners
   socket.on('globalChatMessage', globalChat);
-  // ADD YOUR EVENT LISTENERS HERE
+  socket.on('privateChatMessage', privateChat);
 });
 
 

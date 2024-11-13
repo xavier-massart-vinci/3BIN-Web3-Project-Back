@@ -16,10 +16,10 @@ router.post('/register', async (req, res) => {
         }
         try{
             const hashedPassword = await bcrypt.hash(password, 13);
-            const user = new User({username, password: hashedPassword});
-            user.save().then(() => {
-                const token = jwt.sign({username}, process.env.JWT_SECRET);
-                return res.json({token}).status(201);
+            const newUser = new User({username, password: hashedPassword});
+            newUser.save().then((user) => {
+                const token = jwt.sign({username: user.username}, process.env.JWT_SECRET);
+                return res.json({token, user}).status(201);
             }).catch(() => {
                 res.sendStatus(400);
             })
@@ -39,14 +39,14 @@ router.post('/login', async (req, res) => {
         return res.sendStatus(400);
     }
     try{
-        User.find({username})
+        User.findOne({username})
         .then(async (user) => {
             if(user.length === 0){
                 return res.sendStatus(401);
             }
-            if(await bcrypt.compare(password, user[0].password)){
-                const token = jwt.sign({username}, process.env.JWT_SECRET);
-                return res.json({token});
+            if(await bcrypt.compare(password, user.password)){
+                const token = jwt.sign({username: user.username}, process.env.JWT_SECRET);
+                return res.json({token, user});
             }
             return res.sendStatus(401);
         })
