@@ -5,7 +5,7 @@ const validMessage = (message) => {
         && typeof message === 'object'
         && typeof message.content === 'string'
         && typeof message.from === 'string' 
-        && typeof message.to === 'int'
+        && typeof message.to === 'string'
         && typeof message.type === 'string';
 }
 
