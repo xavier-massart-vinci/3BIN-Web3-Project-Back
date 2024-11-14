@@ -39,6 +39,7 @@ const io = new Server({
 
 const globalChat = require('./socket/globalChatHandler')(io);
 const privateChat = require('./socket/privateChatHandler')(io);
+const chatHistoryHandler = require('./socket/chatHistoryHandler')(io);
 
 // Middleware (connection)
 io.use(authSocketMiddleware);
@@ -67,6 +68,7 @@ io.on('connection', (socket) => {
 
   
   // Attach event listeners
+  socket.on('joinChat', chatHistoryHandler);
   socket.on('globalChatMessage', globalChat);
   socket.on('privateChatMessage', privateChat);
 });
