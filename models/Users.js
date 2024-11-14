@@ -1,7 +1,4 @@
 const mongoose = require('mongoose');
-const connect = require('../utils/mongo');
-
-connect();
 
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
