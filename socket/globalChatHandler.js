@@ -1,16 +1,20 @@
+const addMessageInDB = require("../utils/message");
+
 module.exports = (io) =>{
-    const globalChat = function(msg) {
+    const globalChat = async function(msg) {
         const socket = this;
         io.emit('globalChatMessage', msg);
         const message = {
-            sender: socket.user.username,
-            receiver: msg.for,
+            sender: socket.user.id,
+            receiver: "global",
             content: msg.content,
             type: msg.type,
-            time: msg.time,
+            timestamp: msg.time,
             inGlobalChat: true
         };
-        addMessageInDB(message);
+        
+        await addMessageInDB(message);
+
     };
 
     return globalChat;

@@ -6,7 +6,14 @@ const validMessage = (message) => {
         && typeof message.content === 'string'
         && typeof message.from === 'string' 
         && typeof message.to === 'string'
-        && typeof message.type === 'string';
+        && typeof message.toSocket === 'string'
+        && typeof message.type === 'string'
+        && message.content.length > 0
+        && message.from.length > 0
+        && message.to.length > 0
+        && message.toSocket.length > 0
+        && message.type.length > 0;
+        
 }
 
 const modifyMessageForSecurity = (message) => {
@@ -18,13 +25,17 @@ const modifyMessageForSecurity = (message) => {
 const messageSocketMiddleware = (socket, next) => {
         socket.use((packet, next) => {
             const [event, message] = packet;
-    
+            
+            if(event === 'chatHistory') {
+                return next();
+            }
+
+
             if (!validMessage(message)) {
-                console.log(event, message);
                 return new Error('Invalid message format');
             } 
-
             modifyMessageForSecurity(message);
+            return next();
         });
 
     return next();

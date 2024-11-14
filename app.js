@@ -7,35 +7,30 @@ const { Server } = require('socket.io');
 const connect = require('./utils/mongo');
 require('dotenv').config();
 
-// try to connect to the database
-connect();
-
 const authSocketMiddleware = require('./middleware/authSocketMiddleware');
 const messageSocketMiddleware = require('./middleware/messageSocketMiddleware');
-
 
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auths');
 const usersRouter = require('./routes/users');
 const addMessageInDB = require('./utils/message');
 
+const app = express();
+const httpServer = require('http').Server(app);
+// connect To MongoDB
+connect();
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.PRODUCTION_ORIGIN 
-    : '*'
+  origin:  process.env.NODE_ENV == "production" ? process.env.PRODUCTION_ORIGIN :'*', 
+  methods: ['GET', 'POST'],
 };
 
 
+const io = new Server(httpServer, {
+  cors: corsOptions,
+  transports: ["websocket", "polling"]
+});
 
-
-
-// SOCKET.IO
-const io = new Server({
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
-}).listen(process.env.PORT_SOCKET || 4000);
 
 const globalChat = require('./socket/globalChatHandler')(io);
 const privateChat = require('./socket/privateChatHandler')(io);
@@ -53,22 +48,20 @@ io.on('connection', (socket) => {
   console.log(socket.user.username, " is disconnected"); // DEBUG
 
     // Send to all users the disconnected user
-    socket.broadcast.emit('userDisconnect', {user: socket.user.username, socketId: socket.id});
+    socket.broadcast.emit('userDisconnect', {user: socket.user, socketId: socket.id});
   });
 
   // Send to the newly connected user the list of users
-  var users = [];
-  for (let [id, soc] of io.of("/").sockets) {
-    users.push({user: soc.user, socketId: id});
-  }
+  const users = Array.from(io.of("/").sockets).map(([id, soc]) => ({
+    user: soc.user,
+    socketId: id,
+  }));
   socket.emit('userDiscoveryInit', users);
 
-  // Send to all users the new user
   socket.broadcast.emit('userDiscovery', {user: socket.user, socketId: socket.id});
-
   
   // Attach event listeners
-  socket.on('joinChat', chatHistoryHandler);
+  socket.on('chatHistory', chatHistoryHandler);
   socket.on('globalChatMessage', globalChat);
   socket.on('privateChatMessage', privateChat);
 });
@@ -78,7 +71,6 @@ io.on('connection', (socket) => {
 
 
 // API
-var app = express();
 
 // Middleware
 app.use(cors(corsOptions));
@@ -94,4 +86,4 @@ app.use('/users', usersRouter);
 
 
 
-module.exports = app;
+module.exports = { app, httpServer, io };

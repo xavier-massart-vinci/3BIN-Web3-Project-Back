@@ -1,30 +1,39 @@
-module.exports = (io) =>{
-    const globalChat = async function(msg) {
+const Messages = require("../models/Messages");
+
+module.exports = (io) => {
+    const chatHistory = async function(msg) {
         const socket = this;
-        const contact = msg.to;
-        let messages;
+        const inGlobalChat = msg.inGlobalChat;
+        let messages = [];
 
-        if(contact == 'global') {
-            messages = await Message.find({ inGlobalChat: true })
-            .sort({ timestamp: 1 })
-            .limit(20);
-
+        if(inGlobalChat) {
+            messages = await Messages.find({ inGlobalChat: true }); 
         } else {
-            const user = socket.user.id;
-            messages = await Message.find({
+            const user = socket.user.id; 
+            const contact = msg.contact;
+            messages = await Messages.find({
                 $and: [
-                    { isFlinGlobalChat: false}
+                    { inGlobalChat: false },
+                    {
+                        $or: [
+                            { sender: user, receiver: contact },
+                            { sender: contact, receiver: user }
+                        ]
+                    }
                 ],
-                $or: [
-                    { sender: user, receiver: contact },
-                    { sender: contact, receiver: user }
-                ]
-            }).sort({ timestamp: 1 })
-            .limit(20);
+                
+            });
         }
-        socket.emit('chatHistory', messages); 
-
+       messages = messages.map(message => {
+              return {
+                content: message.content,
+                from: message.sender,
+                to: message.receiver,
+                type: message.type,
+                time: message.timestamp
+              }});
+        socket.emit('chatHistory', messages);
     };
 
-    return globalChat;
+    return chatHistory;
 };

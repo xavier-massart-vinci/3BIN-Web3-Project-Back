@@ -1,18 +1,18 @@
 const addMessageInDB = require("../utils/message");
 
 module.exports = (io) =>{
-    const privateChat = function(msg) {
+    const privateChat = async function(msg) {
         const socket = this;
-        socket.to(msg.for).emit("privateChatMessage", msg);
+        socket.to(msg.toSocket).emit("privateChatMessage", msg);
         const message = {
-            sender: socket.user.username,
-            receiver: msg.for,
+            sender: socket.user.id,
+            receiver: msg.to,
             content: msg.content,
             type: msg.type,
-            time: msg.time,
+            timestamp: msg.time,
             inGlobalChat: false
         };
-        addMessageInDB(message);
+        await addMessageInDB(message);
     };
     
     return privateChat;
