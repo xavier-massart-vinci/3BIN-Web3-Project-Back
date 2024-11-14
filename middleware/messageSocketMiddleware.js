@@ -1,23 +1,33 @@
 const { v4: uuidv4 } = require('uuid');
 
+const validMessage = (message) => {
+    return message 
+        && typeof message === 'object'
+        && typeof message.content === 'string'
+        && typeof message.from === 'string' 
+        && typeof message.to === 'string'
+        && typeof message.type === 'string';
+}
 
+const modifyMessageForSecurity = (message) => {
+    message.id = uuidv4();
+    message.time = new Date().toISOString();
+    return message;
+}
 
 const messageSocketMiddleware = (socket, next) => {
-    socket.use((packet, next) => { const message = packet[1]; 
-        if (!message || typeof message !== 'object'
-            || !message.from 
-            || !message.to 
-            || !message.text
-            || typeof message.content === 'string'
-            || typeof message.from !== 'string' 
-            || typeof message.to !== 'string'
-        ) {
-             return next(new Error('Invalid message format')); 
-        } 
-        message.id = uuidv4();
-        message.time = new Date().toISOString(); next(); 
-        message.fromUsername = socket.user.username;
-    });
+        socket.use((packet, next) => {
+            const [event, message] = packet;
+    
+            if (!validMessage(message)) {
+                console.log(event, message);
+                return new Error('Invalid message format');
+            } 
+
+            modifyMessageForSecurity(message);
+        });
+
+    return next();
 }
 
 module.exports = messageSocketMiddleware;

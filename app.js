@@ -35,7 +35,7 @@ const io = new Server({
     origin: "*",
     methods: ["GET", "POST"]
   }
-}).listen(4000); // TODO: Change port number
+}).listen(process.env.PORT_SOCKET || 4000);
 
 const globalChat = require('./socket/globalChatHandler')(io);
 const privateChat = require('./socket/privateChatHandler')(io);
