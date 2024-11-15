@@ -55,11 +55,11 @@ io.on('connection', (socket) => {
   });
 
   // Send to the newly connected user the list of users
-  const users = Array.from(io.of("/").sockets).map(([id, socket]) => ({
+  const usersList = Array.from(io.of("/").sockets).map(([id, socket]) => ({
     username: socket.user.username,
     id: socket.user.id
   }));
-  socket.emit('userDiscoveryInit', users);
+  socket.emit('userDiscoveryInit', usersList);
 
   socket.broadcast.emit('userDiscovery', discoverUser);
   users.addUser(socket.user.id, socket.id);
