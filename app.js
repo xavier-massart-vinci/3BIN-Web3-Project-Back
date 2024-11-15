@@ -5,6 +5,8 @@ const logger = require('morgan');
 const cors = require('cors');
 const { Server } = require('socket.io');
 const connect = require('./utils/mongo');
+const { users } = require("./utils/usersSocket");
+
 require('dotenv').config();
 
 const authSocketMiddleware = require('./middleware/authSocketMiddleware');
@@ -13,7 +15,6 @@ const messageSocketMiddleware = require('./middleware/messageSocketMiddleware');
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auths');
 const usersRouter = require('./routes/users');
-const addMessageInDB = require('./utils/message');
 
 const app = express();
 const httpServer = require('http').Server(app);
@@ -42,23 +43,27 @@ io.use(messageSocketMiddleware);
 
 // listen for incoming connections
 io.on('connection', (socket) => { 
+  const discoverUser = {username: socket.user.username, id: socket.user.id};
   console.log(socket.user.username, " is connected"); // DEBUG
   
   socket.on('disconnect', () => {
   console.log(socket.user.username, " is disconnected"); // DEBUG
 
     // Send to all users the disconnected user
-    socket.broadcast.emit('userDisconnect', {user: socket.user, socketId: socket.id});
+    socket.broadcast.emit('userDisconnect', discoverUser);
+    users.removeUser(socket.user.id);
   });
 
   // Send to the newly connected user the list of users
-  const users = Array.from(io.of("/").sockets).map(([id, soc]) => ({
-    user: soc.user,
-    socketId: id,
+  const users = Array.from(io.of("/").sockets).map(([id, socket]) => ({
+    username: socket.user.username,
+    id: socket.user.id
   }));
   socket.emit('userDiscoveryInit', users);
 
-  socket.broadcast.emit('userDiscovery', {user: socket.user, socketId: socket.id});
+  socket.broadcast.emit('userDiscovery', discoverUser);
+  users.addUser(socket.user.id);
+  
   
   // Attach event listeners
   socket.on('chatHistory', chatHistoryHandler);

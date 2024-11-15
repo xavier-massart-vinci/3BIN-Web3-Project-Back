@@ -1,9 +1,11 @@
 const addMessageInDB = require("../utils/message");
+const { users } = require("../utils/usersSocket");
 
 module.exports = (io) =>{
     const privateChat = async function(msg) {
         const socket = this;
-        socket.to(msg.toSocket).emit("privateChatMessage", msg);
+        let toSocket = users.getUser(msg.to);
+        socket.to(toSocket).emit("privateChatMessage", msg);
         const message = {
             sender: socket.user.id,
             receiver: msg.to,
