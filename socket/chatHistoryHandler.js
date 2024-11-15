@@ -24,7 +24,7 @@ module.exports = (io) => {
                 
             });
         }
-       messages = messages.slice(20).map(message => {
+       messages = messages.map(message => {
               return {
                 id: message._id,
                 content: message.content,
