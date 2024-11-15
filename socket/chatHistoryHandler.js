@@ -26,6 +26,7 @@ module.exports = (io) => {
         }
        messages = messages.slice(20).map(message => {
               return {
+                id: message._id,
                 content: message.content,
                 from: message.sender,
                 to: message.receiver,
