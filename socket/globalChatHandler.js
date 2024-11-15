@@ -1,4 +1,4 @@
-const addMessageInDB = require("../utils/message");
+const addMessageInDB = require("../services/message");
 
 module.exports = (io) =>{
     const globalChat = async function(msg) {
