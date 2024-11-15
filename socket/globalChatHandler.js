@@ -1,6 +1,6 @@
 const addMessageInDB = require("../services/message");
 
-module.exports = (io) =>{
+module.exports = (socket, io) =>{
     const globalChat = async function(msg) {
         const socket = this;
         io.emit('globalChatMessage', msg);
