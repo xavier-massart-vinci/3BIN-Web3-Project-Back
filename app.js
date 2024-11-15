@@ -62,7 +62,7 @@ io.on('connection', (socket) => {
   socket.emit('userDiscoveryInit', users);
 
   socket.broadcast.emit('userDiscovery', discoverUser);
-  users.addUser(socket.user.id);
+  users.addUser(socket.user.id, socket.id);
   
   
   // Attach event listeners

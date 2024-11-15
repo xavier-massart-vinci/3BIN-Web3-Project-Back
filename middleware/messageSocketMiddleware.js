@@ -5,11 +5,9 @@ const validMessage = (message) => {
         && typeof message === 'object'
         && typeof message.content === 'string'
         && typeof message.to === 'string'
-        && typeof message.toSocket === 'string'
         && typeof message.type === 'string'
         && message.content.length > 0
         && message.to.length > 0
-        && message.toSocket.length > 0
         && message.type.length > 0;
         
 }

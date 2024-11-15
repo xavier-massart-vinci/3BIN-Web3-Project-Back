@@ -1,6 +1,5 @@
 let users = new Map();
 
-
 users.addUser = function(userId, socketId) {
     users.set(userId, socketId);
 }
