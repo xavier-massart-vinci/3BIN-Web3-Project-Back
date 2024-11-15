@@ -5,7 +5,8 @@ module.exports = (io) =>{
     const privateChat = async function(msg) {
         const socket = this;
         let toSocket = users.getUser(msg.to);
-        socket.to(toSocket).emit("privateChatMessage", msg);
+        socket.to(toSocket).emit("privateChatMessage", msg); // Send the message to the receiver
+        socket.to(socket.id).emit("privateChatMessage", msg); // Send the message to the sender
         const message = {
             sender: socket.user.id,
             receiver: msg.to,
