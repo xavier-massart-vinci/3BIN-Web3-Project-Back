@@ -1,19 +1,25 @@
 const express = require('express');
-const path = require('path');
-const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
 const { Server } = require('socket.io');
-const connect = require('./utils/mongo');
+const connect = require('./services/mongo');
+const { users } = require("./services/usersSocket");
+
 require('dotenv').config();
 
+// Middleware
 const authSocketMiddleware = require('./middleware/authSocketMiddleware');
 const messageSocketMiddleware = require('./middleware/messageSocketMiddleware');
 
+// Socket Handlers
+const globalChat = require('./socket/globalChatHandler');
+const privateChat = require('./socket/privateChatHandler');
+const chatHistoryHandler = require('./socket/chatHistoryHandler');
+
+// Road API
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auths');
 const usersRouter = require('./routes/users');
-const addMessageInDB = require('./utils/message');
 
 const app = express();
 const httpServer = require('http').Server(app);
@@ -32,38 +38,40 @@ const io = new Server(httpServer, {
 });
 
 
-const globalChat = require('./socket/globalChatHandler')(io);
-const privateChat = require('./socket/privateChatHandler')(io);
-const chatHistoryHandler = require('./socket/chatHistoryHandler')(io);
 
-// Middleware (connection)
+
+// Socket.io
+
+// Middleware 
 io.use(authSocketMiddleware);
 io.use(messageSocketMiddleware);
 
-// listen for incoming connections
 io.on('connection', (socket) => { 
-  console.log(socket.user.username, " is connected"); // DEBUG
-  
-  socket.on('disconnect', () => {
-  console.log(socket.user.username, " is disconnected"); // DEBUG
+  const newUser = {username: socket.user.username, id: socket.user.id};
 
+  socket.on('disconnect', () => {
     // Send to all users the disconnected user
-    socket.broadcast.emit('userDisconnect', {user: socket.user, socketId: socket.id});
+    socket.broadcast.emit('userDisconnect', newUser);
+    users.removeUser(socket.user.id);
   });
 
-  // Send to the newly connected user the list of users
-  const users = Array.from(io.of("/").sockets).map(([id, soc]) => ({
-    user: soc.user,
-    socketId: id,
+  // Send to the newly connected user the list of users (id, username)
+  const usersList = Array.from(io.of("/").sockets).map(([id, socket]) => ({
+    username: socket.user.username,
+    id: socket.user.id
   }));
-  socket.emit('userDiscoveryInit', users);
+  socket.emit('userDiscoveryInit', usersList);
 
-  socket.broadcast.emit('userDiscovery', {user: socket.user, socketId: socket.id});
+
+  // Send to all users the newly connected user
+  socket.broadcast.emit('userDiscovery', newUser);
+  users.addUser(socket.user.id, socket.id); 
+  
   
   // Attach event listeners
-  socket.on('chatHistory', chatHistoryHandler);
-  socket.on('globalChatMessage', globalChat);
-  socket.on('privateChatMessage', privateChat);
+  socket.on('chatHistory', chatHistoryHandler(socket, io));
+  socket.on('globalChatMessage', globalChat(socket, io));
+  socket.on('privateChatMessage', privateChat (socket, io));
 });
 
 
@@ -77,8 +85,6 @@ app.use(cors(corsOptions));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
