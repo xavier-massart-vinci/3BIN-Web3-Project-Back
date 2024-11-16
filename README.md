@@ -17,8 +17,7 @@
     NODE_ENV=development
     MONGODB=YOUR_URL_MONGODB
     JWT_SECRET=YOUR_SECRET
-    API_PORT=3000
-    SOCKET_PORT=4000
+    PORT=3000
     ```
 
 4. Install the dependencies:
