@@ -5,7 +5,7 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Cloner le dépôt GitHub du backend
-#RUN git clone https://github.com/xavier-massart-vinci/3BIN-Web3-Project-Back .
+RUN git clone https://github.com/xavier-massart-vinci/3BIN-Web3-Project-Back/tree/chore/build .
 
 # Se déplacer dans le dossier du backend
 WORKDIR /app
