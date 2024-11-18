@@ -21,7 +21,7 @@ module.exports = (msg) => {
         break;
 
     default:
-      msg.content = "Command not found";
+      msg.content = "Commande inexistante";
       msg.type = "error";
       break;
   }
