@@ -11,27 +11,22 @@ module.exports = (msg) => {
       break;
 
     case "/citation":
-        // TODO
-        msg.content = "";
-        msg.type = "text";
+        msg.content = "La lumière la plus forte est celle à l'intérieur. - lux";
+        msg.type = "quote";
       break;
 
-    case startWith("/ascii"): // Turn the text into an ascii logo
-        // TODO
+    case "/ascii":
         msg.content = "https://www.asciiart.eu/text-to-ascii-art";
         msg.type = "text";
         break;
 
-
-
     default:
-      msg.content = "Command not found"; // Normalement gérer dans le front
+      msg.content = "Command not found";
       msg.type = "error";
       break;
   }
   return msg;
 };
-
 
 
 /* TODO : Trouver API générateur de gifs et de memes
@@ -41,6 +36,6 @@ module.exports = (msg) => {
           Rajouter ça au front pour afficher les commandes disponibles
 
                 "/help":
-                msg.content = "Available commands: /gif, /meme, /citation, /ascii, /help";
-                msg.type = "text";
+                "Available commands: /gif, /meme, /citation, /ascii";
+
 */
