@@ -15,7 +15,7 @@
 3. Create .env and add the following environment variables: 
     ```env 
     NODE_ENV=development
-    MONGODB=YOUR_URL_MONGODB
+    MONGO_URI=YOUR_URL_MONGODB
     JWT_SECRET=YOUR_SECRET
     PORT=3000
     ```
