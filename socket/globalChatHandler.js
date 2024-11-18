@@ -17,6 +17,8 @@ module.exports = (socket, io) => {
       timestamp: msg.time,
       inGlobalChat: true,
     };
+    if(msg.type === "error") return;
+    
     await addMessageInDB(message);
   };
 

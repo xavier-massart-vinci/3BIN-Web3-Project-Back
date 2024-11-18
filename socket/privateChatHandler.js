@@ -25,6 +25,8 @@ module.exports = (io) =>{
             timestamp: msg.time,
             inGlobalChat: false
         };
+        if(msg.type === "error") return;
+        
         await addMessageInDB(message);
     };
     
