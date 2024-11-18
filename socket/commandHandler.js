@@ -33,9 +33,7 @@ module.exports = (msg) => {
           Trouver API générateur de citations
           Trouver API générateur d'image en charactères ASCII
 
-          Rajouter ça au front pour afficher les commandes disponibles
+          Ajouter commande vinci qui affiche le logo
 
-                "/help":
-                "Available commands: /gif, /meme, /citation, /ascii";
-
+          Ajouter des commandes
 */
