@@ -34,13 +34,10 @@ router.get('/search', verifyAuth, async (req, res) => {
 router.post('/sendFriendRequest', verifyAuth, async (req, res) => {
     const currentUsername  = req.user.username;
     const friendUsername = req.body.username;
-    console.log('friendUsername', friendUsername); 
 
     try {
         const currentUser = await User.findOne({ username: currentUsername });
         const userToAdd = await User.findOne({ username: friendUsername });
-        console.log('currentUser', currentUser);
-        console.log('userToAdd', userToAdd);
 
         if (!userToAdd) {
             return res.status(404).json({ error: 'User not found' });
@@ -78,11 +75,10 @@ router.get('/sentRequests', verifyAuth, async (req, res) => {
     try {
         // Récupère l'ID de l'utilisateur à partir du token
         const username = req.user.username; 
-
         const user = await User.findOne({username: username});
 
         // Récupérer les demandes envoyées par l'utilisateur
-        const sentRequests = await FriendRequest.find({ sender: user._id })
+        const sentRequests = await FriendRequest.find({ sender: user._id, status: 'pending' })
             .populate('receiver', 'username')
             .exec();
 
@@ -108,7 +104,7 @@ router.get('/receivedRequests', verifyAuth, async (req, res) => {
         const user = await User.findOne({username: username});
 
         // Récupérer les demandes reçues par l'utilisateur
-        const receivedRequests = await FriendRequest.find({ receiver: user._id })
+        const receivedRequests = await FriendRequest.find({ receiver: user._id, status: 'pending' })
             .populate('sender', 'username')
             .exec();
 
@@ -175,44 +171,6 @@ router.post('/rejectFriendRequest', verifyAuth, async (req, res) => {
     } catch (error) {
         console.error('Error rejecting friend request:', error);
         res.status(500).json({ error: 'Error rejecting friend request' });
-    }
-});
-
-
-router.post('/addFriend', verifyAuth, async (req, res) => {
-    const usernameFriend = req.body.username;
-    const usernameCurrent = req.user.username;
-     
-    try {
-        // Find the user to be added by username
-        const userToAdd = await User.findOne({ username: usernameFriend });
-        if (!userToAdd) {
-            return res.status(404).json({ error: 'User not found' });
-        } 
- 
-        // Find the current user based on the verified token
-        const currentUser = await User.findOne({ username: usernameCurrent }); 
-        if (!currentUser) {
-            return res.status(404).json({ error: 'Current user not found' });
-        }
-
-        if(currentUser.username === userToAdd.username){
-            return res.status(400).json({ message: 'You cannot add yourself as a friend' });
-        }
-
-        // Check if the friend is already in the list
-        if (!currentUser.friends.includes(userToAdd._id)) {
-            // Push the userToAdd's ObjectId into the friends list
-            currentUser.friends.push(userToAdd._id);
-            await currentUser.save();
-            return res.status(200).json({ message: 'Friend added', user: userToAdd });
-        } else {
-            return res.status(400).json({ message: 'Friend already added' });
-        }
-
-    } catch (error) {
-        console.error('Error adding friend:', error);
-        return res.status(500).json({ error: 'Error adding friend' });
     }
 });
 
