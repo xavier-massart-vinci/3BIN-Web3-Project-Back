@@ -1,4 +1,5 @@
 const addMessageInDB = require("../services/message");
+const User = require("../models/Users");
 const { users } = require("../services/usersSocket");
 
 module.exports = (io) =>{
@@ -13,14 +14,27 @@ module.exports = (io) =>{
         const receiverId = msg.to;
         console.log("sender", sender);
         console.log("receiverId", receiverId);
-
  
-        // Check if the sender and receiver are friends
-        const isFriend = sender.friends.includes(receiverId);
-        console.log("isFriend", isFriend);
-        if (!isFriend) {
-            return; 
-        } 
+ 
+        // Récupérer le destinataire depuis la base de données
+        const receiver = await User.findById(receiverId);
+        if (!receiver) {
+            return console.log("Destinataire introuvable");
+        }
+
+        // Vérifier si le destinataire est dans la liste des amis de l'expéditeur
+        const isFriendSender = sender.friends.includes(receiverId);
+        const isFriendReceiver = receiver.friends.includes(sender._id);
+        console.log("isFriendSender:", isFriendSender);
+        console.log("isFriendReceiver:", isFriendReceiver);
+
+        // Si l'un des deux n'est plus ami avec l'autre, ne pas envoyer le message
+        if (!isFriendSender || !isFriendReceiver) {
+            socket.emit('messageError', {
+                error: "La personne a qui vous voulez envoyer un message n'est plus ami avec vous."
+            });
+            return;
+        }
 
         // socket send the message to the receiver
         if(toSocket){

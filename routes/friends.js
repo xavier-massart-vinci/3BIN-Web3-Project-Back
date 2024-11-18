@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('../models/Users');
 const FriendRequest = require('../models/FriendsRequest');
 const verifyAuth = require('../middleware/authAPIMiddleware');
-
+ 
 
 router.get('/getFriends', verifyAuth, async (req, res) => {
     const { username } = req.user;
@@ -201,6 +201,14 @@ router.post('/deleteFriend', verifyAuth, async (req, res) => {
         currentUser.friends.splice(friendIndex, 1);
         await currentUser.save();
 
+        // Suppression de la demande d'ami entre les deux utilisateurs (si elle existe)
+        await FriendRequest.deleteOne({
+            $or: [
+                { sender: currentUser._id, receiver: userToRemove._id },
+                { sender: userToRemove._id, receiver: currentUser._id }
+            ]
+        });
+        
         return res.status(200).json({ message: 'Ami supprimé avec succès', user: userToRemove });
     } catch (error) {
         return res.status(500).json({ error: 'Erreur lors de la suppression de l’ami' });
