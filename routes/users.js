@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const Messages = require('../models/Messages');
 const User = require('../models/Users');
 
 // GET All /users

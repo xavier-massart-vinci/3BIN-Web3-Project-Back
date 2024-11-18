@@ -17,7 +17,6 @@ const authSocketMiddleware = (socket, next) => {
                 return next(new Error('Authentication error'));
             }
             socket.user = user;
-            socket.test = "test";
             next();
         });
     });
