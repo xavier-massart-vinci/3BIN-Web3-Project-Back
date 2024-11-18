@@ -32,7 +32,7 @@ const sendErrorMessages = (socket, event, content) => {
   });
 };
 
-const timeout = (socket) => {
+const timeoutCheck = (socket) => {
   if (
     usersTimeout.has(socket.user.id) &&
     Date.now() <
@@ -63,7 +63,7 @@ const messageSocketMiddleware = (socket, next) => {
     }
 
     // Check if user is sending messages too fast
-    if (timeout(socket)) {
+    if (timeoutCheck(socket)) {
       sendErrorMessages(
         socket,
         event,
