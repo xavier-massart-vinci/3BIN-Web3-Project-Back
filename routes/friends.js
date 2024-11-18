@@ -4,8 +4,8 @@ const User = require('../models/Users');
 const FriendRequest = require('../models/FriendsRequest');
 const { users } = require("../services/usersSocket");
 const verifyAuth = require('../middleware/authAPIMiddleware');
- 
 
+// Route to get the friends list of the current user
 router.get('/getFriends', verifyAuth, async (req, res) => {
     const { username } = req.user;
 
@@ -18,22 +18,23 @@ router.get('/getFriends', verifyAuth, async (req, res) => {
     }
 });
 
+// Route to search for users by username
 router.get('/search', verifyAuth, async (req, res) => {
-    const {username} = req.query;
-    if(!username){
+    const { username } = req.query;
+    if (!username) {
         return res.sendStatus(400);
     }
-    try{
-        const users = await User.find({username: {$regex: username, $options: 'i'}});
+    try {
+        const users = await User.find({ username: { $regex: username, $options: 'i' } });
         return res.status(200).json(users);
     } catch {
-        return res.sendStatus(500).json({error: 'Error searching users'});
+        return res.sendStatus(500).json({ error: 'Error searching users' });
     }
 });
 
-
+// Route to send a friend request to another user
 router.post('/sendFriendRequest', verifyAuth, async (req, res) => {
-    const currentUsername  = req.user.username;
+    const currentUsername = req.user.username;
     const friendUsername = req.body.username;
 
     try {
@@ -71,22 +72,22 @@ router.post('/sendFriendRequest', verifyAuth, async (req, res) => {
     }
 });
 
-// Route pour récupérer les demandes envoyées par l'utilisateur
+// Route to retrieve friend requests sent by the user
 router.get('/sentRequests', verifyAuth, async (req, res) => {
     try {
-        // Récupère l'ID de l'utilisateur à partir du token
-        const username = req.user.username; 
-        const user = await User.findOne({username: username});
+        // Get user ID from the token
+        const username = req.user.username;
+        const user = await User.findOne({ username: username });
 
-        // Récupérer les demandes envoyées par l'utilisateur
+        // Retrieve requests sent by the user
         const sentRequests = await FriendRequest.find({ sender: user._id, status: 'pending' })
             .populate('receiver', 'username')
             .exec();
 
-        // Ne renvoyer que le username du receiver dans la réponse
+        // Only return the username of the receiver in the response
         const simplifiedRequests = sentRequests.map(request => ({
             _id: request._id,
-            receiver: request.receiver.username, // Seul le username du destinataire
+            receiver: request.receiver.username,
             status: request.status
         }));
 
@@ -97,22 +98,22 @@ router.get('/sentRequests', verifyAuth, async (req, res) => {
     }
 });
 
-// Route pour récupérer les demandes reçues par l'utilisateur
+// Route to retrieve friend requests received by the user
 router.get('/receivedRequests', verifyAuth, async (req, res) => {
     try {
-        // Récupère l'ID de l'utilisateur à partir du token
+        // Get user ID from the token
         const username = req.user.username;
-        const user = await User.findOne({username: username});
+        const user = await User.findOne({ username: username });
 
-        // Récupérer les demandes reçues par l'utilisateur
+        // Retrieve requests received by the user
         const receivedRequests = await FriendRequest.find({ receiver: user._id, status: 'pending' })
             .populate('sender', 'username')
             .exec();
 
-        // Ne renvoyer que le username du receiver dans la réponse
+        // Only return the username of the sender in the response
         const simplifiedRequests = receivedRequests.map(request => ({
             _id: request._id,
-            sender: request.sender.username, // Seul le username du destinataire
+            sender: request.sender.username,
             status: request.status
         }));
 
@@ -123,8 +124,9 @@ router.get('/receivedRequests', verifyAuth, async (req, res) => {
     }
 });
 
+// Route to accept a friend request
 router.post('/acceptFriendRequest', verifyAuth, async (req, res) => {
-    const { requestId } = req.body;
+    const { requestId } = req.body; // Id of the friendRequest to accept
 
     try {
         const io = req.app.get('socketio');
@@ -145,13 +147,13 @@ router.post('/acceptFriendRequest', verifyAuth, async (req, res) => {
 
         await sender.save();
         await receiver.save();
- 
-         // Émettre un événement Socket.IO aux deux utilisateurs concernés
-         const senderSocketId = users.getUser(sender._id.toString());
-         if (senderSocketId) {
+
+        // Emit a Socket.IO event to both users
+        const senderSocketId = users.getUser(sender._id.toString());
+        if (senderSocketId) {
             io.to(senderSocketId).emit('friendAdded', { friendId: receiver._id.toString(), friendName: receiver.username });
-          }
-    
+        }
+
         res.status(200).json({ message: 'Friend request accepted' });
     } catch (error) {
         console.error('Error accepting friend request:', error);
@@ -159,6 +161,7 @@ router.post('/acceptFriendRequest', verifyAuth, async (req, res) => {
     }
 });
 
+// Route to reject a friend request
 router.post('/rejectFriendRequest', verifyAuth, async (req, res) => {
     const { requestId } = req.body;
 
@@ -175,7 +178,7 @@ router.post('/rejectFriendRequest', verifyAuth, async (req, res) => {
         friendRequest.status = 'rejected';
         await friendRequest.save();
 
-        // Émettre un événement Socket.IO à l'expéditeur pour rafraîchir la liste
+        // Emit a Socket.IO event to the sender to refresh the list
         const senderSocket = users.getUser(friendRequest.sender);
         if (senderSocket) {
             senderSocket.emit('friendListUpdated');
@@ -188,34 +191,35 @@ router.post('/rejectFriendRequest', verifyAuth, async (req, res) => {
     }
 });
 
+// Route to delete a friend
 router.post('/deleteFriend', verifyAuth, async (req, res) => {
-    const userDelete = req.body.username; // Nom d'utilisateur de l'ami à supprimer
-    const currentUsername = req.user.username; // Nom d'utilisateur du user connecté
+    const userDelete = req.body.username; // Username of the friend to delete
+    const currentUsername = req.user.username; // Username of the logged-in user
 
     try {
-        // Recherche de l'ami à supprimer par son nom d'utilisateur
+        // Find the friend to delete by their username
         const userToRemove = await User.findOne({ username: userDelete });
         if (!userToRemove) {
-            return res.status(404).json({ error: 'Ami non trouvé' });
-        } 
+            return res.status(404).json({ error: 'Friend not found' });
+        }
 
-        // Recherche du user actuel (connecté) par son nom d'utilisateur
+        // Find the current user by their username
         const currentUser = await User.findOne({ username: currentUsername });
         if (!currentUser) {
-            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+            return res.status(404).json({ error: 'User not found' });
         }
 
-        // Vérifie si l'ami est déjà dans la liste d'amis
+        // Check if the friend is already in the friends list
         const friendIndex = currentUser.friends.indexOf(userToRemove._id);
         if (friendIndex === -1) {
-            return res.status(400).json({ message: "Cet utilisateur n'est pas dans votre liste d'amis" });
+            return res.status(400).json({ message: 'This user is not in your friends list' });
         }
 
-        // Supprime l'ami de la liste
+        // Remove the friend from the list
         currentUser.friends.splice(friendIndex, 1);
         await currentUser.save();
 
-        // Suppression de la demande d'ami entre les deux utilisateurs (si elle existe)
+        // Delete any friend request between the two users (if it exists)
         await FriendRequest.deleteOne({
             $or: [
                 { sender: currentUser._id, receiver: userToRemove._id },
@@ -223,11 +227,10 @@ router.post('/deleteFriend', verifyAuth, async (req, res) => {
             ]
         });
 
-        return res.status(200).json({ message: 'Ami supprimé avec succès', user: userToRemove });
+        return res.status(200).json({ message: 'Friend successfully removed', user: userToRemove });
     } catch (error) {
-        return res.status(500).json({ error: 'Erreur lors de la suppression de l’ami' });
+        return res.status(500).json({ error: 'Error removing friend' });
     }
 });
-
 
 module.exports = router;
