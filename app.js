@@ -37,6 +37,7 @@ const io = new Server(httpServer, {
   cors: corsOptions,
   transports: ["websocket", "polling"]
 });
+app.set('socketio', io);
 
 
 

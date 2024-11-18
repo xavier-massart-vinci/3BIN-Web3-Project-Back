@@ -6,27 +6,19 @@ module.exports = (io) =>{
     const privateChat = async function(msg) {
         const socket = this;
         let toSocket = users.getUser(msg.to);
-        console.log("toSocket", toSocket);
 
         // TODO check if receiver is a friend of the sender
         // Get the sender and receiver id
-        const sender = socket.user;
+        const senderId = socket.user._id;
         const receiverId = msg.to;
-        console.log("sender", sender);
-        console.log("receiverId", receiverId);
  
- 
-        // Récupérer le destinataire depuis la base de données
+        // Récupérer les deux user après ajout depuis la base de données
+        const sender = await User.findById(senderId);
         const receiver = await User.findById(receiverId);
-        if (!receiver) {
-            return console.log("Destinataire introuvable");
-        }
 
         // Vérifier si le destinataire est dans la liste des amis de l'expéditeur
         const isFriendSender = sender.friends.includes(receiverId);
         const isFriendReceiver = receiver.friends.includes(sender._id);
-        console.log("isFriendSender:", isFriendSender);
-        console.log("isFriendReceiver:", isFriendReceiver);
 
         // Si l'un des deux n'est plus ami avec l'autre, ne pas envoyer le message
         if (!isFriendSender || !isFriendReceiver) {
@@ -34,7 +26,7 @@ module.exports = (io) =>{
                 error: "La personne a qui vous voulez envoyer un message n'est plus ami avec vous."
             });
             return;
-        }
+        } 
 
         // socket send the message to the receiver
         if(toSocket){
