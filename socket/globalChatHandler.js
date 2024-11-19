@@ -1,6 +1,6 @@
 const addMessageInDB = require("../services/message");
 
-module.exports = (socket, io) => {
+module.exports = (io) => {
   const globalChat = async function (msg) {
     const socket = this;
 
@@ -8,11 +8,11 @@ module.exports = (socket, io) => {
       require("./commandHandler")(msg);
     }
 
-    if(msg.type === "error") {
+    if (msg.type === "error") {
       socket.emit("globalChatMessage", msg);
       return;
-  }
-    
+    }
+
     io.emit("globalChatMessage", msg);
     const message = {
       sender: socket.user.id,
@@ -22,9 +22,8 @@ module.exports = (socket, io) => {
       timestamp: msg.time,
       inGlobalChat: true,
     };
-    
+
     await addMessageInDB(message);
   };
-
   return globalChat;
 };
