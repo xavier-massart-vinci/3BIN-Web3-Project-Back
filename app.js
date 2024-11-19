@@ -20,11 +20,11 @@ const privateChat = require("./socket/privateChatHandler");
 const chatHistoryHandler = require("./socket/chatHistoryHandler");
 
 // Road API
-const indexRouter = require("./routes/index");
 const authRouter = require("./routes/auths");
 const usersRouter = require("./routes/users");
 
 const app = express();
+
 // connect To MongoDB
 connect();
 
@@ -48,8 +48,10 @@ if (process.env.NODE_ENV === "production") {
 const corsOptions = {
   origin:
     process.env.NODE_ENV === "production" ? process.env.PRODUCTION_ORIGIN : "*",
-  methods: ["GET", "POST", "PUT", "DELETE"],
+
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 };
+
 
 const io = new Server(server, {
   cors: corsOptions,
@@ -83,9 +85,10 @@ io.on("connection", (socket) => {
   users.addUser(socket.user.id, socket.id);
 
   // Attach event listeners
-  socket.on("chatHistory", chatHistoryHandler(socket, io));
-  socket.on("globalChatMessage", globalChat(socket, io));
-  socket.on("privateChatMessage", privateChat(socket, io));
+  socket.on("chatHistory", chatHistoryHandler());
+  socket.on("globalChatMessage", globalChat(io));
+  socket.on("privateChatMessage", privateChat(socket));
+
 });
 
 // API
@@ -96,7 +99,6 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use("/", indexRouter);
 app.use("/auth", authRouter);
 app.use("/users", usersRouter);
 
