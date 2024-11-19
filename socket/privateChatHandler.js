@@ -9,6 +9,11 @@ module.exports = (io) =>{
             require("./commandHandler")(msg);
         }
         
+        if(msg.type === "error") {
+            socket.emit("privateChatMessage", msg);
+            return;
+        }
+
         let toSocket = users.getUser(msg.to);
         // TODO check if receiver is a friend of the sender
         
@@ -25,7 +30,6 @@ module.exports = (io) =>{
             timestamp: msg.time,
             inGlobalChat: false
         };
-        if(msg.type === "error") return;
         
         await addMessageInDB(message);
     };

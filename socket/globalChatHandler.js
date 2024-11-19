@@ -7,6 +7,11 @@ module.exports = (socket, io) => {
     if (msg.content.startsWith("/")) {
       require("./commandHandler")(msg);
     }
+
+    if(msg.type === "error") {
+      socket.emit("globalChatMessage", msg);
+      return;
+  }
     
     io.emit("globalChatMessage", msg);
     const message = {
@@ -17,7 +22,6 @@ module.exports = (socket, io) => {
       timestamp: msg.time,
       inGlobalChat: true,
     };
-    if(msg.type === "error") return;
     
     await addMessageInDB(message);
   };
