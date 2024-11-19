@@ -19,8 +19,8 @@ RUN npm install --production
 # Copier le reste des fichiers du backend
 COPY . .
 
-# Exposer le port 4000 pour le backend
-EXPOSE 4000
+# Exposer le port 3000 pour le backend
+EXPOSE 3000
 
 # Démarrer le serveur Node.js
 CMD ["npm", "run", "start"]

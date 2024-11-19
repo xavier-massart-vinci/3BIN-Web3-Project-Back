@@ -4,6 +4,9 @@ const cors = require("cors");
 const { Server } = require("socket.io");
 const connect = require("./services/mongo");
 const { users } = require("./services/usersSocket");
+const http = require("http");
+const https = require("https");
+const fs = require("fs");
 
 require("dotenv").config();
 
@@ -21,17 +24,36 @@ const authRouter = require("./routes/auths");
 const usersRouter = require("./routes/users");
 
 const app = express();
-const httpServer = require("http").Server(app);
+
 // connect To MongoDB
 connect();
+
+let server;
+if (process.env.NODE_ENV === "production") {
+  // Load SSL/TLS certificate and private key
+  const privateKey = fs.readFileSync("./cert/private.key", "utf8");
+  const certificate = fs.readFileSync("./cert/certificat.crt", "utf8");
+
+  const credentials = { key: privateKey, cert: certificate };
+
+  // Create HTTPS server
+  server = https.createServer(credentials, app);
+  console.log("Running in production mode with HTTPS");
+} else {
+  // Create HTTP server for development
+  server = http.createServer(app);
+  console.log("Running in development mode with HTTP");
+}
 
 const corsOptions = {
   origin:
     process.env.NODE_ENV === "production" ? process.env.PRODUCTION_ORIGIN : "*",
+
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 };
 
-const io = new Server(httpServer, {
+
+const io = new Server(server, {
   cors: corsOptions,
   transports: ["websocket", "polling"],
 });
@@ -65,7 +87,8 @@ io.on("connection", (socket) => {
   // Attach event listeners
   socket.on("chatHistory", chatHistoryHandler());
   socket.on("globalChatMessage", globalChat(io));
-  socket.on("privateChatMessage", privateChat());
+  socket.on("privateChatMessage", privateChat(socket));
+
 });
 
 // API
@@ -79,4 +102,4 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/auth", authRouter);
 app.use("/users", usersRouter);
 
-module.exports = { app, httpServer, io };
+module.exports = { app, server, io };
