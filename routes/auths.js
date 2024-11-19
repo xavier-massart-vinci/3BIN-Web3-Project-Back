@@ -1,8 +1,7 @@
-const router = require('express').Router();
-const User = require('../models/Users');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-
+const router = require("express").Router();
+const User = require("../models/Users");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 router.post('/register', async (req, res) => {
     const {username, password} = req.body;
@@ -11,7 +10,7 @@ router.post('/register', async (req, res) => {
     }
     
     User.findOne({ username }).then( async (existingUser) => {
-        if (existingUser) {
+        if (!existingUser) {
             return res.sendStatus(409);
         }
         try{
@@ -27,7 +26,7 @@ router.post('/register', async (req, res) => {
             res.sendStatus(500);
         }
     }).catch(() => {
-        res.sendStatus(500);
+      res.sendStatus(500);
     });
     
 })
@@ -41,7 +40,7 @@ router.post('/login', async (req, res) => {
     try{
         User.findOne({username})
         .then(async (user) => {
-            if(user.length === 0){
+            if(!user){
                 return res.sendStatus(401);
             }
             if(await bcrypt.compare(password, user.password)){
@@ -54,6 +53,5 @@ router.post('/login', async (req, res) => {
         res.sendStatus(500);
     }
 })
-
 
 module.exports = router;
