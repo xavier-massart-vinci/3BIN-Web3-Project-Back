@@ -5,10 +5,7 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Cloner le dépôt GitHub du backend
-RUN git clone https://github.com/xavier-massart-vinci/3BIN-Web3-Project-Back.git .
-
-# Se déplacer dans le dossier du backend
-WORKDIR /app
+#RUN git clone https://github.com/xavier-massart-vinci/3BIN-Web3-Project-Back.git .
 
 # Copier le package.json et package-lock.json pour installer les dépendances
 COPY package.json package-lock.json ./
@@ -19,7 +16,7 @@ RUN npm install --production
 # Copier le reste des fichiers du backend
 COPY . .
 
-# Exposer le port 3000 pour le backend
+# Exposer le port 4000 pour le backend
 EXPOSE 3000
 
 # Démarrer le serveur Node.js
