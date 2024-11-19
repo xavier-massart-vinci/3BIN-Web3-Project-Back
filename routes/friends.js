@@ -4,7 +4,7 @@ const User = require('../models/Users');
 const FriendRequest = require('../models/FriendsRequest');
 const { users } = require("../services/usersSocket");
 const verifyAuth = require('../middleware/authAPIMiddleware');
-
+ 
 // Route to get the friends list of the current user
 router.get('/getFriends', verifyAuth, async (req, res) => {
     const { username } = req.user;
@@ -80,7 +80,7 @@ router.get('/sentRequests', verifyAuth, async (req, res) => {
         const user = await User.findOne({ username: username });
 
         // Retrieve requests sent by the user
-        const sentRequests = await FriendRequest.find({ sender: user._id, status: 'pending' })
+        const sentRequests = await FriendRequest.find({ sender: user._id, status: { $in: ['pending', 'rejected']} })
             .populate('receiver', 'username')
             .exec();
 
@@ -106,7 +106,7 @@ router.get('/receivedRequests', verifyAuth, async (req, res) => {
         const user = await User.findOne({ username: username });
 
         // Retrieve requests received by the user
-        const receivedRequests = await FriendRequest.find({ receiver: user._id, status: 'pending' })
+        const receivedRequests = await FriendRequest.find({ receiver: user._id, status: 'pending'})
             .populate('sender', 'username')
             .exec();
 
@@ -151,7 +151,7 @@ router.post('/acceptFriendRequest', verifyAuth, async (req, res) => {
         // Emit a Socket.IO event to both users
         const senderSocketId = users.getUser(sender._id.toString());
         if (senderSocketId) {
-            io.to(senderSocketId).emit('friendAdded', { friendId: receiver._id.toString(), friendName: receiver.username });
+            io.to(senderSocketId).emit('friendAdded');
         }
 
         res.status(200).json({ message: 'Friend request accepted' });
@@ -166,22 +166,19 @@ router.post('/rejectFriendRequest', verifyAuth, async (req, res) => {
     const { requestId } = req.body;
 
     try {
+        const io = req.app.get('socketio');
         const friendRequest = await FriendRequest.findById(requestId);
         if (!friendRequest) {
             return res.status(404).json({ error: 'Request not found' });
-        }
-
-        if (friendRequest.receiver.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ error: 'You cannot reject this request' });
         }
 
         friendRequest.status = 'rejected';
         await friendRequest.save();
 
         // Emit a Socket.IO event to the sender to refresh the list
-        const senderSocket = users.getUser(friendRequest.sender);
-        if (senderSocket) {
-            senderSocket.emit('friendListUpdated');
+        const senderSocketId = users.getUser(friendRequest.sender._id.toString());
+        if (senderSocketId) {
+            io.to(senderSocketId).emit('friendRequestRejected');
         }
 
         res.status(200).json({ message: 'Friend request rejected' });
