@@ -4,12 +4,19 @@ const { users } = require("../services/usersSocket");
 module.exports = (io) =>{
     const privateChat = async function(msg) {
         const socket = this;
-        let toSocket = users.getUser(msg.to);
 
+        if(msg.content.startsWith("/")){
+            require("./commandHandler")(msg);
+        }
+        
+        if(msg.type === "error") {
+            socket.emit("privateChatMessage", msg);
+            return;
+        }
+
+        let toSocket = users.getUser(msg.to);
         // TODO check if receiver is a friend of the sender
         
-
-
         // socket send the message to the receiver
         socket.to(toSocket).emit("privateChatMessage", msg); // Send the message to the receiver
         socket.emit("privateChatMessage", msg); // Send the message to the sender
@@ -23,6 +30,7 @@ module.exports = (io) =>{
             timestamp: msg.time,
             inGlobalChat: false
         };
+        
         await addMessageInDB(message);
     };
     
