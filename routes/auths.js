@@ -11,7 +11,7 @@ router.post('/register', async (req, res) => {
     }
     
     User.findOne({ username }).then( async (existingUser) => {
-        if (existingUser) {
+        if (!existingUser) {
             return res.sendStatus(409);
         }
         try{
@@ -41,7 +41,7 @@ router.post('/login', async (req, res) => {
     try{
         User.findOne({username})
         .then(async (user) => {
-            if(user.length === 0){
+            if(!user){
                 return res.sendStatus(401);
             }
             if(await bcrypt.compare(password, user.password)){

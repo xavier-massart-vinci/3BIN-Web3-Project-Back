@@ -27,7 +27,7 @@ const httpServer = require('http').Server(app);
 connect();
 
 const corsOptions = {
-  origin:   process.env.NODE_ENV === 'production' ? process.env.PRODUCTION_ORIGIN : 'http://localhost:3000', 
+  origin:   process.env.NODE_ENV === 'production' ? process.env.PRODUCTION_ORIGIN : '*', 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 };
 
