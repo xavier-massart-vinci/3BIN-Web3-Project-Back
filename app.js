@@ -46,10 +46,8 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const corsOptions = {
-  origin:
-    process.env.NODE_ENV === "production" ? process.env.PRODUCTION_ORIGIN : "*",
-
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  origin:   process.env.NODE_ENV === 'production' ? process.env.PRODUCTION_ORIGIN : '*', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
 };
 
 
