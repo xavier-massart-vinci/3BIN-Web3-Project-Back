@@ -63,9 +63,9 @@ io.on("connection", (socket) => {
   users.addUser(socket.user.id, socket.id);
 
   // Attach event listeners
-  socket.on("chatHistory", chatHistoryHandler(socket, io));
-  socket.on("globalChatMessage", globalChat(socket, io));
-  socket.on("privateChatMessage", privateChat(socket, io));
+  socket.on("chatHistory", chatHistoryHandler());
+  socket.on("globalChatMessage", globalChat(io));
+  socket.on("privateChatMessage", privateChat());
 });
 
 // API

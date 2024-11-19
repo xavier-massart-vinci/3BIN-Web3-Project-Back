@@ -1,6 +1,6 @@
 const Messages = require("../models/Messages");
 
-module.exports = (io) => {
+module.exports = () => {
   const chatHistory = async function (msg) {
     const socket = this;
     const inGlobalChat = msg.inGlobalChat;

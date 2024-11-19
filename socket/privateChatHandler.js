@@ -1,7 +1,7 @@
 const addMessageInDB = require("../services/message");
 const { users } = require("../services/usersSocket");
 
-module.exports = (io) => {
+module.exports = () => {
   const privateChat = async function (msg) {
     const socket = this;
     let toSocket = users.getUser(msg.to);
