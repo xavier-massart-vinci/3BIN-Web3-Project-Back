@@ -1,11 +1,12 @@
 const addMessageInDB = require("../services/message");
+const commandHandler = require("./commandHandler");
 
 module.exports = (socket, io) => {
   const globalChat = async function (msg) {
     const socket = this;
 
     if (msg.content.startsWith("/")) {
-      require("./commandHandler")(msg);
+      await commandHandler(msg);
     }
 
     if(msg.type === "error") {
