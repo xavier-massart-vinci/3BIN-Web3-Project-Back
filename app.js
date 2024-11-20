@@ -31,10 +31,11 @@ connect();
 let server;
 if (process.env.NODE_ENV === "production") {
   // Load SSL/TLS certificate and private key
-  const privateKey = fs.readFileSync("./cert/private.key", "utf8");
-  const certificate = fs.readFileSync("./cert/certificat.crt", "utf8");
+  const privateKey = fs.readFileSync("./cert/privkey.pem");
+  const certificate = fs.readFileSync("./cert/cert.pem");
+  const ca = fs.readFileSync("./cert/chain.pem");
 
-  const credentials = { key: privateKey, cert: certificate };
+  const credentials = { key: privateKey, cert: certificate, ca };
 
   // Create HTTPS server
   server = https.createServer(credentials, app);
@@ -49,7 +50,6 @@ const corsOptions = {
   origin:   process.env.NODE_ENV === 'production' ? process.env.PRODUCTION_ORIGIN : '*', 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 };
-
 
 const io = new Server(server, {
   cors: corsOptions,
@@ -86,7 +86,6 @@ io.on("connection", (socket) => {
   socket.on("chatHistory", chatHistoryHandler());
   socket.on("globalChatMessage", globalChat(io));
   socket.on("privateChatMessage", privateChat(socket));
-
 });
 
 // API
