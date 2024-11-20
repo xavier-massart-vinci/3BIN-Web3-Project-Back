@@ -10,7 +10,7 @@ router.post('/register', async (req, res) => {
     }
     
     User.findOne({ username }).then( async (existingUser) => {
-        if (!existingUser) {
+        if (existingUser) {
             return res.sendStatus(409);
         }
         try{
