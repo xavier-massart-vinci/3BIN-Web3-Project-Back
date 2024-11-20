@@ -12,8 +12,7 @@ module.exports = async (msg) => {
           tag: "meme",
         },
         headers: {
-          "x-rapidapi-key":
-            "4bbbb59145msh742c1b265c2209bp1110c1jsn382aebee2e94",
+          "x-rapidapi-key": process.env.RAPIDAPI_KEY,
           "x-rapidapi-host": "giphy.p.rapidapi.com",
         },
       };
@@ -49,8 +48,7 @@ module.exports = async (msg) => {
           language_code: "fr",
         },
         headers: {
-          "x-rapidapi-key":
-            "4bbbb59145msh742c1b265c2209bp1110c1jsn382aebee2e94",
+          "x-rapidapi-key": process.env.RAPIDAPI_KEY,
           "x-rapidapi-host": "quotes15.p.rapidapi.com",
         },
       };
