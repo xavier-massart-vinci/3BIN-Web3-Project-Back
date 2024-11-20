@@ -1,39 +1,69 @@
-module.exports = (msg) => {
+const axios = require("axios");
+require("dotenv").config();
+
+module.exports = async (msg) => {
   switch (msg.content) {
     case "/gif":
-      msg.content = "https://www.icegif.com/wp-content/uploads/2023/06/icegif-154.gif";
-      msg.type = "gif";
+      const gifOptions = {
+        method: "GET",
+        url: "https://giphy.p.rapidapi.com/v1/gifs/random",
+        params: {
+          api_key: process.env.GIPHY_API_KEY,
+          tag: "meme",
+        },
+        headers: {
+          "x-rapidapi-key": process.env.RAPIDAPI_KEY,
+          "x-rapidapi-host": "giphy.p.rapidapi.com",
+        },
+      };
+
+      try {
+        const response = await axios.request(gifOptions);
+        msg.content = response.data.data.images.original.url;
+        msg.type = "gif";
+      } catch (error) {
+        msg.content = "Erreur lors de la récupération du GIF";
+        msg.type = "error";
+      }
       break;
 
     case "/meme":
-      msg.content = "https://res.cloudinary.com/practicaldev/image/fetch/s--7xOGg_Q_--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_880/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/7si8jfsjdhatsdw5gxll.jpg";
-      msg.type = "image";
+      try {
+        const response = await axios.get("https://api.imgflip.com/get_memes");
+        const memes = response.data.data.memes;
+        const randomMeme = memes[Math.floor(Math.random() * memes.length)];
+        msg.content = randomMeme.url;
+        msg.type = "image";
+      } catch (error) {
+        msg.content = "Erreur lors de la récupération des mèmes";
+        msg.type = "error";
+      }
       break;
 
     case "/citation":
-        msg.content = "La lumière la plus forte est celle à l'intérieur. - lux";
+      const quoteOptions = {
+        method: "GET",
+        url: "https://quotes15.p.rapidapi.com/quotes/random/",
+        params: {
+          language_code: "fr",
+        },
+        headers: {
+          "x-rapidapi-key": process.env.RAPIDAPI_KEY,
+          "x-rapidapi-host": "quotes15.p.rapidapi.com",
+        },
+      };
+
+      try {
+        const response = await axios.request(quoteOptions);
+        msg.content = response.data.content;
         msg.type = "quote";
+      } catch (error) {
+        msg.content = "Erreur lors de la récupération de la citation";
+        msg.type = "error";
+      }
       break;
-
-    case "/ascii":
-        msg.content = "https://www.asciiart.eu/text-to-ascii-art";
-        msg.type = "text";
-        break;
-
     default:
       msg.content = "Commande inexistante";
       msg.type = "error";
-      break;
   }
-  return msg;
 };
-
-
-/* TODO : Trouver API générateur de gifs et de memes
-          Trouver API générateur de citations
-          Trouver API générateur d'image en charactères ASCII
-
-          Ajouter commande vinci qui affiche le logo
-
-          Ajouter des commandes
-*/
