@@ -54,28 +54,4 @@ router.post('/login', async (req, res) => {
     }
 })
 
-router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.sendStatus(400);
-  }
-  try {
-    User.findOne({ username }).then(async (user) => {
-      if (user.length === 0) {
-        return res.sendStatus(401);
-      }
-      if (await bcrypt.compare(password, user.password)) {
-        const token = jwt.sign(
-          { username: user.username },
-          process.env.JWT_SECRET
-        );
-        return res.json({ token, user });
-      }
-      return res.sendStatus(401);
-    });
-  } catch {
-    res.sendStatus(500);
-  }
-});
-
 module.exports = router;
