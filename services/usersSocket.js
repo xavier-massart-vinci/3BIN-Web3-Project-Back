@@ -1,15 +1,15 @@
 let users = new Map();
 
-users.addUser = function(userId, socketId) {
-    users.set(userId, socketId);
-}
+users.addUser = function (userId, socketId) {
+  users.set(userId, socketId);
+};
 
-users.removeUser = function(userId) {
-    users.delete(userId);
-}
+users.removeUser = function (userId) {
+  users.delete(userId);
+};
 
-users.getUser = function(userId) {
-    return users.get(userId);
-}
+users.getUser = function (userId) {
+  return users.get(userId);
+};
 
-module.exports = {users};
+module.exports = { users };
