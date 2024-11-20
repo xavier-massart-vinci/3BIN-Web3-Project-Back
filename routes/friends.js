@@ -25,7 +25,7 @@ router.get('/search', verifyAuth, async (req, res) => {
         return res.sendStatus(400);
     }
     try {
-        const users = await User.find({ username: { $regex: username, $options: 'i' } });
+        const users = await User.find({ username: { $regex: username, $options: 'i' } }).limit(5);;
         return res.status(200).json(users);
     } catch {
         return res.sendStatus(500).json({ error: 'Error searching users' });
@@ -38,10 +38,12 @@ router.post('/sendFriendRequest', verifyAuth, async (req, res) => {
     const friendUsername = req.body.username;
 
     try {
+        const io = req.app.get('socketio');
+
         const currentUser = await User.findOne({ username: currentUsername });
         const userToAdd = await User.findOne({ username: friendUsername });
 
-        if (!userToAdd) {
+        if (!currentUser || !userToAdd) {
             return res.status(404).json({ error: 'User not found' });
         }
 
@@ -49,14 +51,24 @@ router.post('/sendFriendRequest', verifyAuth, async (req, res) => {
             return res.status(400).json({ error: 'You cannot send a friend request to yourself' });
         }
 
-        // Check if request already exists
-        const existingRequest = await FriendRequest.findOne({
+        // Check if request already exists for sender
+        const existingRequestForSender = await FriendRequest.findOne({
             sender: currentUser._id,
             receiver: userToAdd._id,
         });
 
-        if (existingRequest) {
+        if (existingRequestForSender) {
             return res.status(400).json({ error: 'Friend request already sent' });
+        }
+
+        // Check if request already exists for receiver
+        const existingRequestForReceiver = await FriendRequest.findOne({
+            sender: userToAdd._id,
+            receiver: currentUser._id,
+        });
+
+        if (existingRequestForReceiver) {
+            return res.status(400).json({ error: 'Friend request already received' });
         }
 
         const newRequest = new FriendRequest({
@@ -65,6 +77,12 @@ router.post('/sendFriendRequest', verifyAuth, async (req, res) => {
         });
 
         await newRequest.save();
+
+        const receiverSocketId = users.getUser(userToAdd._id.toString());
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit('friendRequestReceived');
+        }
+
         return res.status(200).json({ message: 'Friend request sent' });
     } catch (error) {
         console.error('Error sending friend request:', error);
@@ -80,7 +98,7 @@ router.get('/sentRequests', verifyAuth, async (req, res) => {
         const user = await User.findOne({ username: username });
 
         // Retrieve requests sent by the user
-        const sentRequests = await FriendRequest.find({ sender: user._id, status: { $in: ['pending', 'rejected']} })
+        const sentRequests = await FriendRequest.find({ sender: user._id })
             .populate('receiver', 'username')
             .exec();
 
@@ -106,7 +124,7 @@ router.get('/receivedRequests', verifyAuth, async (req, res) => {
         const user = await User.findOne({ username: username });
 
         // Retrieve requests received by the user
-        const receivedRequests = await FriendRequest.find({ receiver: user._id, status: 'pending'})
+        const receivedRequests = await FriendRequest.find({ receiver: user._id})
             .populate('sender', 'username')
             .exec();
 
@@ -130,13 +148,11 @@ router.post('/acceptFriendRequest', verifyAuth, async (req, res) => {
 
     try {
         const io = req.app.get('socketio');
+
         const friendRequest = await FriendRequest.findById(requestId);
         if (!friendRequest) {
-            return res.status(404).json({ error: 'Request not found' });
+            return res.status(404).json({ error: 'Requested friend not found' });
         }
-
-        friendRequest.status = 'accepted';
-        await friendRequest.save();
 
         // Add friend to both users
         const sender = await User.findById(friendRequest.sender);
@@ -148,11 +164,19 @@ router.post('/acceptFriendRequest', verifyAuth, async (req, res) => {
         await sender.save();
         await receiver.save();
 
+        await FriendRequest.deleteOne({
+            $or: [
+                { sender: friendRequest.sender, receiver: friendRequest.receiver },
+                { sender: friendRequest.receiver, receiver: friendRequest.sender }
+            ]
+        });
+
         // Emit a Socket.IO event to both users
         const senderSocketId = users.getUser(sender._id.toString());
         console.log(senderSocketId);
         if (senderSocketId) {
             io.to(senderSocketId).emit('friendAdded');
+            io.to(senderSocketId).emit('friendRequestRejectedOrAccepted');
         }
 
         res.status(200).json({ message: 'Friend request accepted' });
@@ -168,13 +192,11 @@ router.post('/rejectFriendRequest', verifyAuth, async (req, res) => {
 
     try {
         const io = req.app.get('socketio');
+
         const friendRequest = await FriendRequest.findById(requestId);
         if (!friendRequest) {
             return res.status(404).json({ error: 'Request not found' });
         }
-
-        /*friendRequest.status = 'rejected';
-        await friendRequest.save();*/
 
         await FriendRequest.deleteOne({
             $or: [
@@ -186,7 +208,7 @@ router.post('/rejectFriendRequest', verifyAuth, async (req, res) => {
         // Emit a Socket.IO event to the sender to refresh the list
         const senderSocketId = users.getUser(friendRequest.sender._id.toString());
         if (senderSocketId) {
-            io.to(senderSocketId).emit('friendRequestRejected');
+            io.to(senderSocketId).emit('friendRequestRejectedOrAccepted');
         }
 
         res.status(200).json({ message: 'Friend request rejected' });
@@ -203,7 +225,7 @@ router.post('/deleteFriend', verifyAuth, async (req, res) => {
 
     try {
         const io = req.app.get('socketio');
-        
+
         // Find the friend to delete by their username
         const friendUser = await User.findOne({ username: friendUsername });
         if (!friendUser) {
