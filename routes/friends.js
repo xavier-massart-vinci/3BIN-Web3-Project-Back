@@ -150,6 +150,7 @@ router.post('/acceptFriendRequest', verifyAuth, async (req, res) => {
 
         // Emit a Socket.IO event to both users
         const senderSocketId = users.getUser(sender._id.toString());
+        console.log(senderSocketId);
         if (senderSocketId) {
             io.to(senderSocketId).emit('friendAdded');
         }
@@ -201,6 +202,8 @@ router.post('/deleteFriend', verifyAuth, async (req, res) => {
     const currentUsername = req.user.username; // Username of the logged-in user
 
     try {
+        const io = req.app.get('socketio');
+        
         // Find the friend to delete by their username
         const friendUser = await User.findOne({ username: friendUsername });
         if (!friendUser) {
@@ -236,6 +239,11 @@ router.post('/deleteFriend', verifyAuth, async (req, res) => {
                 { sender: friendUser._id, receiver: currentUser._id }
             ]
         });
+
+        const friendSocketId = users.getUser(friendUser._id.toString());
+        if (friendSocketId) {
+            io.to(friendSocketId).emit('friendRemoved');
+        }
 
         return res.status(200).json({ message: 'Friend successfully removed', user: friendUser });
     } catch (error) {
