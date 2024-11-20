@@ -1,4 +1,5 @@
 const addMessageInDB = require("../services/message");
+const User = require("../models/Users");
 const { users } = require("../services/usersSocket");
 
 module.exports = () => {
@@ -16,9 +17,30 @@ module.exports = () => {
 
     let toSocket = users.getUser(msg.to);
     // TODO check if receiver is a friend of the sender
+    // Get the sender and receiver id
+    const senderId = socket.user._id;
+    const receiverId = msg.to;
+
+    // Récupérer les deux user après ajout depuis la base de données
+    const sender = await User.findById(senderId);
+    const receiver = await User.findById(receiverId);
+
+    // Vérifier si le destinataire est dans la liste des amis de l'expéditeur
+    const isFriendSender = sender.friends.includes(receiverId);
+    const isFriendReceiver = receiver.friends.includes(sender._id);
+
+    // Si l'un des deux n'est plus ami avec l'autre, ne pas envoyer le message
+    if (!isFriendSender || !isFriendReceiver) {
+        socket.emit('messageError', {
+            error: "La personne a qui vous voulez envoyer un message n'est plus ami avec vous."
+        });
+        return;
+    } 
 
     // socket send the message to the receiver
-    socket.to(toSocket).emit("privateChatMessage", msg); // Send the message to the receiver
+        if(toSocket){
+        socket.to(toSocket).emit("privateChatMessage", msg); // Send the message to the receiver
+        }
     socket.emit("privateChatMessage", msg); // Send the message to the sender
 
     // save message in the database

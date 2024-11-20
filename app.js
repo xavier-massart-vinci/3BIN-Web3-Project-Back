@@ -22,6 +22,7 @@ const chatHistoryHandler = require("./socket/chatHistoryHandler");
 // Road API
 const authRouter = require("./routes/auths");
 const usersRouter = require("./routes/users");
+const friendsRouter = require('./routes/friends');
 
 const app = express();
 
@@ -55,6 +56,7 @@ const io = new Server(server, {
   cors: corsOptions,
   transports: ["websocket", "polling"],
 });
+app.set('socketio', io);
 
 // Socket.io
 
@@ -98,5 +100,6 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use("/auth", authRouter);
 app.use("/users", usersRouter);
+app.use('/friends', friendsRouter);
 
 module.exports = { app, server, io };
