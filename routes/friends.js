@@ -172,8 +172,15 @@ router.post('/rejectFriendRequest', verifyAuth, async (req, res) => {
             return res.status(404).json({ error: 'Request not found' });
         }
 
-        friendRequest.status = 'rejected';
-        await friendRequest.save();
+        /*friendRequest.status = 'rejected';
+        await friendRequest.save();*/
+
+        await FriendRequest.deleteOne({
+            $or: [
+                { sender: friendRequest.sender, receiver: friendRequest.receiver },
+                { sender: friendRequest.receiver, receiver: friendRequest.sender }
+            ]
+        });
 
         // Emit a Socket.IO event to the sender to refresh the list
         const senderSocketId = users.getUser(friendRequest.sender._id.toString());
@@ -190,13 +197,13 @@ router.post('/rejectFriendRequest', verifyAuth, async (req, res) => {
 
 // Route to delete a friend
 router.post('/deleteFriend', verifyAuth, async (req, res) => {
-    const userDelete = req.body.username; // Username of the friend to delete
+    const friendUsername = req.body.username; // Username of the friend to delete
     const currentUsername = req.user.username; // Username of the logged-in user
 
     try {
         // Find the friend to delete by their username
-        const userToRemove = await User.findOne({ username: userDelete });
-        if (!userToRemove) {
+        const friendUser = await User.findOne({ username: friendUsername });
+        if (!friendUser) {
             return res.status(404).json({ error: 'Friend not found' });
         }
 
@@ -206,25 +213,31 @@ router.post('/deleteFriend', verifyAuth, async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        // Check if the friend is already in the friends list
-        const friendIndex = currentUser.friends.indexOf(userToRemove._id);
-        if (friendIndex === -1) {
-            return res.status(400).json({ message: 'This user is not in your friends list' });
+        // Check if the friend is in the current user's friends list and if  the current is in the friend's friends list
+        const friendUserIndex = currentUser.friends.indexOf(friendUser._id);
+        const currentUserIndex = friendUser.friends.indexOf(currentUser._id);
+
+        if (friendUserIndex === -1 || currentUserIndex === -1) {
+            return res.status(400).json({ message: 'This user is not in your friends list or you are not in his friend list' });
         }
 
-        // Remove the friend from the list
-        currentUser.friends.splice(friendIndex, 1);
+        // Remove the friend from the current user's list
+        currentUser.friends.splice(friendUserIndex, 1);
         await currentUser.save();
+
+        // Remove the current user from the friend's list
+        friendUser.friends.splice(currentUserIndex, 1);
+        await friendUser.save();
 
         // Delete any friend request between the two users (if it exists)
         await FriendRequest.deleteOne({
             $or: [
-                { sender: currentUser._id, receiver: userToRemove._id },
-                { sender: userToRemove._id, receiver: currentUser._id }
+                { sender: currentUser._id, receiver: friendUser._id },
+                { sender: friendUser._id, receiver: currentUser._id }
             ]
         });
 
-        return res.status(200).json({ message: 'Friend successfully removed', user: userToRemove });
+        return res.status(200).json({ message: 'Friend successfully removed', user: friendUser });
     } catch (error) {
         return res.status(500).json({ error: 'Error removing friend' });
     }
