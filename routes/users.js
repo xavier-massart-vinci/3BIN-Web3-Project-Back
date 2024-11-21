@@ -5,6 +5,7 @@ const authAPIMiddleware = require("../middleware/authAPIMiddleware");
 // GET All /users
 router.get("/", authAPIMiddleware, (req, res) => {
   User.find()
+    .select("-friends")
     .then((users) => {
       res.json(users);
     })
