@@ -31,11 +31,11 @@ module.exports = () => {
 
     // Si l'un des deux n'est plus ami avec l'autre, ne pas envoyer le message
     if (!isFriendSender || !isFriendReceiver) {
-        socket.emit('messageError', {
-            error: "La personne a qui vous voulez envoyer un message n'est plus ami avec vous."
-        });
-        return;
-    } 
+      msg.content = "La personne a qui vous voulez envoyer un message n'est plus ami avec vous.";
+      msg.type = "error";
+      socket.emit("privateChatMessage", msg);
+      return;
+    }
 
     // socket send the message to the receiver
         if(toSocket){
