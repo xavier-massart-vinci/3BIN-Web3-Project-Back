@@ -18,6 +18,7 @@ const messageSocketMiddleware = require("./middleware/messageSocketMiddleware");
 const globalChat = require("./socket/globalChatHandler");
 const privateChat = require("./socket/privateChatHandler");
 const chatHistoryHandler = require("./socket/chatHistoryHandler");
+const isTypingHandler = require("./socket/isTypingHandler");
 
 // Road API
 const authRouter = require("./routes/auths");
@@ -88,6 +89,7 @@ io.on("connection", (socket) => {
   socket.on("chatHistory", chatHistoryHandler());
   socket.on("globalChatMessage", globalChat(io));
   socket.on("privateChatMessage", privateChat(socket));
+  socket.on("isTyping", isTypingHandler(io));
 });
 
 // API

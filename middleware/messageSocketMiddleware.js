@@ -52,6 +52,10 @@ const messageSocketMiddleware = (socket, next) => {
       return next();
     }
 
+    if (event === "isTyping") {
+      return next();
+    }
+
     if (!validMessage(message)) {
       return new Error("Invalid message format");
     }
