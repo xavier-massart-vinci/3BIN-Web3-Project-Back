@@ -1,13 +1,14 @@
 const addMessageInDB = require("../services/message");
 const User = require("../models/Users");
 const { users } = require("../services/usersSocket");
+const commandHandler = require("./commandHandler");
 
 module.exports = () => {
   const privateChat = async function (msg) {
     const socket = this;
 
     if (msg.content.startsWith("/")) {
-      require("./commandHandler")(msg);
+      await commandHandler(msg);
     }
 
     if (msg.type === "error") {
