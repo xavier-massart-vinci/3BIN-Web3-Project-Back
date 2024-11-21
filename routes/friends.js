@@ -273,4 +273,44 @@ router.post('/deleteFriend', verifyAuth, async (req, res) => {
     }
 });
 
+// Route to cancel a sent friend request
+router.post('/cancelFriendRequest', verifyAuth, async (req, res) => {
+    const { requestId } = req.body; // Id of the friendRequest to cancel
+
+    try {
+        const io = req.app.get('socketio');
+
+        // Find the friend request to cancel
+        const friendRequest = await FriendRequest.findById(requestId);
+        if (!friendRequest) {
+            return res.status(404).json({ error: 'Friend request not found' });
+        }
+
+        const currentUser = await User.findOne({ username: req.user.username });
+        if (!currentUser) {
+            return res.status(404).json({ error: 'Current user not found' });
+        }
+
+        // Check if the user is the sender of the request
+        if (friendRequest.sender.toString() !== currentUser._id.toString()) {
+            return res.status(403).json({ error: 'You are not authorized to cancel this request' });
+        }
+
+        // Delete the friend request
+        await FriendRequest.findByIdAndDelete(requestId);
+
+        // Emit a Socket.IO event to the receiver to refresh the list
+        const receiverSocketId = users.getUser(friendRequest.receiver.toString());
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit('friendRequestCanceled');
+        }
+
+        res.status(200).json({ message: 'Friend request canceled successfully' });
+    } catch (error) {
+        console.error('Error canceling friend request:', error);
+        res.status(500).json({ error: 'Error canceling friend request' });
+    }
+});
+
+
 module.exports = router;
