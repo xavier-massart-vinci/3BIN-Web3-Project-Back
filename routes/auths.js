@@ -8,14 +8,22 @@ router.post('/register', async (req, res) => {
     if(!username || !password){
         return res.sendStatus(400);
     }
+    if (username.length < 3 || username.length > 15) {
+        return res.sendStatus(400);
+    }
+    if (!/^[a-zA-Z0-9]+$/.test(username)) {
+        return res.sendStatus(400);
+    }
+
+    const usernameLowerCase = username.toLowerCase();
     
-    User.findOne({ username }).then( async (existingUser) => {
+    User.findOne({ username: usernameLowerCase }).then( async (existingUser) => {
         if (existingUser) {
             return res.sendStatus(409);
         }
         try{
             const hashedPassword = await bcrypt.hash(password, 13);
-            const newUser = new User({username, password: hashedPassword});
+            const newUser = new User({username: usernameLowerCase, password: hashedPassword});
             newUser.save().then((user) => {
                 const token = jwt.sign({username: user.username}, process.env.JWT_SECRET);
                 return res.json({token, user}).status(201);
@@ -31,14 +39,22 @@ router.post('/register', async (req, res) => {
     
 })
 
-
 router.post('/login', async (req, res) => {
     const {username, password} = req.body;
     if(!username || !password){
         return res.sendStatus(400);
     }
+    if (username.length < 3 || username.length > 15) {
+        return res.sendStatus(400);
+    }
+    if (!/^[a-zA-Z0-9]+$/.test(username)) {
+        return res.sendStatus(400);
+    }
+
+    const usernameLowerCase = username.toLowerCase();
+
     try{
-        User.findOne({username})
+        User.findOne({ username: usernameLowerCase })
         .then(async (user) => {
             if(!user){
                 return res.sendStatus(401);
