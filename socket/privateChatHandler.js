@@ -17,7 +17,6 @@ module.exports = () => {
     }
 
     let toSocket = users.getUser(msg.to);
-    // TODO check if receiver is a friend of the sender
     // Get the sender and receiver id
     const senderId = socket.user._id;
     const receiverId = msg.to;
