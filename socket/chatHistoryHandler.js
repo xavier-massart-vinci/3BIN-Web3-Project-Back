@@ -7,7 +7,9 @@ module.exports = () => {
     let messages = [];
 
     if (inGlobalChat) {
-      messages = await Messages.find({ inGlobalChat: true });
+      messages = await Messages.find({ inGlobalChat: true })
+        .sort({ timestamp: -1 }) 
+        .limit(20);
     } else {
       const user = socket.user.id;
       const contact = msg.contact;
@@ -21,7 +23,9 @@ module.exports = () => {
             ],
           },
         ],
-      });
+      })
+      .sort({ timestamp: -1 }) 
+      .limit(20);
     }
     messages = messages.map((message) => {
       return {
