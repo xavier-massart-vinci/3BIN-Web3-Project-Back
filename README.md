@@ -39,7 +39,11 @@
 1. Edit the node .env and add
    ```env
        NODE_ENV=production
-       PRODUCTION_ORIGIN=API_IP_OR_DOMAIN_NAME
+       MONGO_URI=[YOUR URI TO YOUR MONGO DB]
+       JWT_SECRET=[YOUR SECRET]
+       PORT=3000
+       RAPIDAPI_KEY=[YOUR RAPIDAPI KEY]
+       GIPHY_API_KEY=[YOUR GIPHY API KEY]
    ```
 2. Start and install for production mode:
    ```sh
